@@ -17,10 +17,12 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.9'  # Ensure correct Python version
 
     - name: Install Dependencies
-      run: pip install -r requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Install Flask and other dependencies
 
     - name: Export Static Files
       run: python app.py  # This will generate the static_site folder
