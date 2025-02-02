@@ -1,12 +1,19 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import pandas as pd
 import os
 
-app = Flask(__name__)
+class Config:
+    OUTPUT_DIR = "output"
+    STATIC_DIR = "static_site"
 
-# Ensure the output directory exists
-OUTPUT_DIR = "output"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+    @staticmethod
+    def ensure_directories():
+        os.makedirs(Config.OUTPUT_DIR, exist_ok=True)
+        os.makedirs(Config.STATIC_DIR, exist_ok=True)
+
+Config.ensure_directories()
+
+app = Flask(__name__)
 
 @app.route("/")
 def index():
@@ -16,23 +23,21 @@ def index():
 def convert():
     """Handle file upload and conversion"""
     if "file" not in request.files:
-        return "No file uploaded", 400
+        return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
 
     if file.filename == "":
-        return "No selected file", 400
+        return jsonify({"error": "No selected file"}), 400
 
     try:
         df = pd.read_csv(file)
-        excel_filename = os.path.join(OUTPUT_DIR, "converted.xlsx")
+        excel_filename = os.path.join(Config.OUTPUT_DIR, "converted.xlsx")
         df.to_excel(excel_filename, index=False, engine='openpyxl')
 
         return send_file(excel_filename, as_attachment=True)
-
     except Exception as e:
-        return str(e), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
-
